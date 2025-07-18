@@ -1,6 +1,6 @@
-set(srcs)
-
-idf_component_register(SRCS ${srcs}
+idf_component_register(SRCS main.cpp
+                        sdcard.cpp
+                        ms.cpp
                        INCLUDE_DIRS "."
-                       REQUIRES fatfs sd_card
-                       WHOLE_ARCHIVE)
+                       REQUIRES littlefs fatfs esp_driver_sdspi esp_driver_uart
+                       )

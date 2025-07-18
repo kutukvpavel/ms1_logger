@@ -277,9 +277,9 @@ CONFIG_BOOTLOADER_PROJECT_VER=1
 # end of Bootloader manager
 
 CONFIG_BOOTLOADER_OFFSET_IN_FLASH=0x1000
-# CONFIG_BOOTLOADER_COMPILER_OPTIMIZATION_SIZE is not set
+CONFIG_BOOTLOADER_COMPILER_OPTIMIZATION_SIZE=y
 # CONFIG_BOOTLOADER_COMPILER_OPTIMIZATION_DEBUG is not set
-CONFIG_BOOTLOADER_COMPILER_OPTIMIZATION_PERF=y
+# CONFIG_BOOTLOADER_COMPILER_OPTIMIZATION_PERF is not set
 # CONFIG_BOOTLOADER_COMPILER_OPTIMIZATION_NONE is not set
 
 #
@@ -446,94 +446,6 @@ CONFIG_COMPILER_ORPHAN_SECTIONS_WARNING=y
 #
 
 #
-# Driver Configurations
-#
-
-#
-# TWAI Configuration
-#
-# CONFIG_TWAI_ISR_IN_IRAM is not set
-CONFIG_TWAI_ERRATA_FIX_BUS_OFF_REC=y
-CONFIG_TWAI_ERRATA_FIX_TX_INTR_LOST=y
-CONFIG_TWAI_ERRATA_FIX_RX_FRAME_INVALID=y
-CONFIG_TWAI_ERRATA_FIX_RX_FIFO_CORRUPT=y
-CONFIG_TWAI_ERRATA_FIX_LISTEN_ONLY_DOM=y
-# end of TWAI Configuration
-
-#
-# Legacy ADC Driver Configuration
-#
-CONFIG_ADC_DISABLE_DAC=y
-# CONFIG_ADC_SUPPRESS_DEPRECATE_WARN is not set
-# CONFIG_ADC_SKIP_LEGACY_CONFLICT_CHECK is not set
-
-#
-# Legacy ADC Calibration Configuration
-#
-CONFIG_ADC_CAL_EFUSE_TP_ENABLE=y
-CONFIG_ADC_CAL_EFUSE_VREF_ENABLE=y
-CONFIG_ADC_CAL_LUT_ENABLE=y
-# CONFIG_ADC_CALI_SUPPRESS_DEPRECATE_WARN is not set
-# end of Legacy ADC Calibration Configuration
-# end of Legacy ADC Driver Configuration
-
-#
-# Legacy DAC Driver Configurations
-#
-# CONFIG_DAC_SUPPRESS_DEPRECATE_WARN is not set
-# CONFIG_DAC_SKIP_LEGACY_CONFLICT_CHECK is not set
-# end of Legacy DAC Driver Configurations
-
-#
-# Legacy MCPWM Driver Configurations
-#
-# CONFIG_MCPWM_SUPPRESS_DEPRECATE_WARN is not set
-# CONFIG_MCPWM_SKIP_LEGACY_CONFLICT_CHECK is not set
-# end of Legacy MCPWM Driver Configurations
-
-#
-# Legacy Timer Group Driver Configurations
-#
-# CONFIG_GPTIMER_SUPPRESS_DEPRECATE_WARN is not set
-# CONFIG_GPTIMER_SKIP_LEGACY_CONFLICT_CHECK is not set
-# end of Legacy Timer Group Driver Configurations
-
-#
-# Legacy RMT Driver Configurations
-#
-# CONFIG_RMT_SUPPRESS_DEPRECATE_WARN is not set
-# CONFIG_RMT_SKIP_LEGACY_CONFLICT_CHECK is not set
-# end of Legacy RMT Driver Configurations
-
-#
-# Legacy I2S Driver Configurations
-#
-# CONFIG_I2S_SUPPRESS_DEPRECATE_WARN is not set
-# CONFIG_I2S_SKIP_LEGACY_CONFLICT_CHECK is not set
-# end of Legacy I2S Driver Configurations
-
-#
-# Legacy I2C Driver Configurations
-#
-# CONFIG_I2C_SKIP_LEGACY_CONFLICT_CHECK is not set
-# end of Legacy I2C Driver Configurations
-
-#
-# Legacy PCNT Driver Configurations
-#
-# CONFIG_PCNT_SUPPRESS_DEPRECATE_WARN is not set
-# CONFIG_PCNT_SKIP_LEGACY_CONFLICT_CHECK is not set
-# end of Legacy PCNT Driver Configurations
-
-#
-# Legacy SDM Driver Configurations
-#
-# CONFIG_SDM_SUPPRESS_DEPRECATE_WARN is not set
-# CONFIG_SDM_SKIP_LEGACY_CONFLICT_CHECK is not set
-# end of Legacy SDM Driver Configurations
-# end of Driver Configurations
-
-#
 # eFuse Bit Manager
 #
 # CONFIG_EFUSE_CUSTOM_TABLE is not set
@@ -545,37 +457,10 @@ CONFIG_EFUSE_MAX_BLK_LEN=192
 # end of eFuse Bit Manager
 
 #
-# ADC and ADC Calibration
-#
-# CONFIG_ADC_ONESHOT_CTRL_FUNC_IN_IRAM is not set
-# CONFIG_ADC_CONTINUOUS_ISR_IRAM_SAFE is not set
-
-#
-# ADC Calibration Configurations
-#
-CONFIG_ADC_CALI_EFUSE_TP_ENABLE=y
-CONFIG_ADC_CALI_EFUSE_VREF_ENABLE=y
-CONFIG_ADC_CALI_LUT_ENABLE=y
-# end of ADC Calibration Configurations
-
-CONFIG_ADC_DISABLE_DAC_OUTPUT=y
-# CONFIG_ADC_ENABLE_DEBUG_LOG is not set
-# end of ADC and ADC Calibration
-
-#
 # Common ESP-related
 #
 CONFIG_ESP_ERR_TO_NAME_LOOKUP=y
 # end of Common ESP-related
-
-#
-# ESP-Driver:DAC Configurations
-#
-# CONFIG_DAC_CTRL_FUNC_IN_IRAM is not set
-# CONFIG_DAC_ISR_IRAM_SAFE is not set
-# CONFIG_DAC_ENABLE_DEBUG_LOG is not set
-CONFIG_DAC_DMA_AUTO_16BIT_ALIGN=y
-# end of ESP-Driver:DAC Configurations
 
 #
 # ESP-Driver:GPIO Configurations
@@ -583,68 +468,6 @@ CONFIG_DAC_DMA_AUTO_16BIT_ALIGN=y
 # CONFIG_GPIO_ESP32_SUPPORT_SWITCH_SLP_PULL is not set
 # CONFIG_GPIO_CTRL_FUNC_IN_IRAM is not set
 # end of ESP-Driver:GPIO Configurations
-
-#
-# ESP-Driver:GPTimer Configurations
-#
-CONFIG_GPTIMER_ISR_HANDLER_IN_IRAM=y
-# CONFIG_GPTIMER_CTRL_FUNC_IN_IRAM is not set
-# CONFIG_GPTIMER_ISR_IRAM_SAFE is not set
-CONFIG_GPTIMER_OBJ_CACHE_SAFE=y
-# CONFIG_GPTIMER_ENABLE_DEBUG_LOG is not set
-# end of ESP-Driver:GPTimer Configurations
-
-#
-# ESP-Driver:I2C Configurations
-#
-# CONFIG_I2C_ISR_IRAM_SAFE is not set
-# CONFIG_I2C_ENABLE_DEBUG_LOG is not set
-# CONFIG_I2C_ENABLE_SLAVE_DRIVER_VERSION_2 is not set
-# end of ESP-Driver:I2C Configurations
-
-#
-# ESP-Driver:I2S Configurations
-#
-# CONFIG_I2S_ISR_IRAM_SAFE is not set
-# CONFIG_I2S_ENABLE_DEBUG_LOG is not set
-# end of ESP-Driver:I2S Configurations
-
-#
-# ESP-Driver:LEDC Configurations
-#
-# CONFIG_LEDC_CTRL_FUNC_IN_IRAM is not set
-# end of ESP-Driver:LEDC Configurations
-
-#
-# ESP-Driver:MCPWM Configurations
-#
-# CONFIG_MCPWM_ISR_IRAM_SAFE is not set
-# CONFIG_MCPWM_CTRL_FUNC_IN_IRAM is not set
-# CONFIG_MCPWM_ENABLE_DEBUG_LOG is not set
-# end of ESP-Driver:MCPWM Configurations
-
-#
-# ESP-Driver:PCNT Configurations
-#
-# CONFIG_PCNT_CTRL_FUNC_IN_IRAM is not set
-# CONFIG_PCNT_ISR_IRAM_SAFE is not set
-# CONFIG_PCNT_ENABLE_DEBUG_LOG is not set
-# end of ESP-Driver:PCNT Configurations
-
-#
-# ESP-Driver:RMT Configurations
-#
-# CONFIG_RMT_ISR_IRAM_SAFE is not set
-# CONFIG_RMT_RECV_FUNC_IN_IRAM is not set
-# CONFIG_RMT_ENABLE_DEBUG_LOG is not set
-# end of ESP-Driver:RMT Configurations
-
-#
-# ESP-Driver:Sigma Delta Modulator Configurations
-#
-# CONFIG_SDM_CTRL_FUNC_IN_IRAM is not set
-# CONFIG_SDM_ENABLE_DEBUG_LOG is not set
-# end of ESP-Driver:Sigma Delta Modulator Configurations
 
 #
 # ESP-Driver:SPI Configurations
@@ -889,59 +712,6 @@ CONFIG_ESP_TIMER_IMPL_TG0_LAC=y
 # end of ESP Timer (High Resolution Timer)
 
 #
-# FAT Filesystem support
-#
-CONFIG_FATFS_VOLUME_COUNT=2
-CONFIG_FATFS_LFN_NONE=y
-# CONFIG_FATFS_LFN_HEAP is not set
-# CONFIG_FATFS_LFN_STACK is not set
-# CONFIG_FATFS_SECTOR_512 is not set
-CONFIG_FATFS_SECTOR_4096=y
-# CONFIG_FATFS_CODEPAGE_DYNAMIC is not set
-CONFIG_FATFS_CODEPAGE_437=y
-# CONFIG_FATFS_CODEPAGE_720 is not set
-# CONFIG_FATFS_CODEPAGE_737 is not set
-# CONFIG_FATFS_CODEPAGE_771 is not set
-# CONFIG_FATFS_CODEPAGE_775 is not set
-# CONFIG_FATFS_CODEPAGE_850 is not set
-# CONFIG_FATFS_CODEPAGE_852 is not set
-# CONFIG_FATFS_CODEPAGE_855 is not set
-# CONFIG_FATFS_CODEPAGE_857 is not set
-# CONFIG_FATFS_CODEPAGE_860 is not set
-# CONFIG_FATFS_CODEPAGE_861 is not set
-# CONFIG_FATFS_CODEPAGE_862 is not set
-# CONFIG_FATFS_CODEPAGE_863 is not set
-# CONFIG_FATFS_CODEPAGE_864 is not set
-# CONFIG_FATFS_CODEPAGE_865 is not set
-# CONFIG_FATFS_CODEPAGE_866 is not set
-# CONFIG_FATFS_CODEPAGE_869 is not set
-# CONFIG_FATFS_CODEPAGE_932 is not set
-# CONFIG_FATFS_CODEPAGE_936 is not set
-# CONFIG_FATFS_CODEPAGE_949 is not set
-# CONFIG_FATFS_CODEPAGE_950 is not set
-CONFIG_FATFS_CODEPAGE=437
-CONFIG_FATFS_FS_LOCK=0
-CONFIG_FATFS_TIMEOUT_MS=10000
-CONFIG_FATFS_PER_FILE_CACHE=y
-# CONFIG_FATFS_USE_FASTSEEK is not set
-CONFIG_FATFS_USE_STRFUNC_NONE=y
-# CONFIG_FATFS_USE_STRFUNC_WITHOUT_CRLF_CONV is not set
-# CONFIG_FATFS_USE_STRFUNC_WITH_CRLF_CONV is not set
-CONFIG_FATFS_VFS_FSTAT_BLKSIZE=4096
-# CONFIG_FATFS_IMMEDIATE_FSYNC is not set
-# CONFIG_FATFS_USE_LABEL is not set
-CONFIG_FATFS_LINK_LOCK=y
-# CONFIG_FATFS_USE_DYN_BUFFERS is not set
-
-#
-# File system free space calculation behavior
-#
-CONFIG_FATFS_DONT_TRUST_FREE_CLUSTER_CNT=0
-CONFIG_FATFS_DONT_TRUST_LAST_ALLOC=0
-# end of File system free space calculation behavior
-# end of FAT Filesystem support
-
-#
 # FreeRTOS
 #
 
@@ -1073,9 +843,9 @@ CONFIG_LOG_TAG_LEVEL_IMPL_CACHE_SIZE=31
 #
 # Format
 #
-# CONFIG_LOG_COLORS is not set
-CONFIG_LOG_TIMESTAMP_SOURCE_RTOS=y
-# CONFIG_LOG_TIMESTAMP_SOURCE_SYSTEM is not set
+CONFIG_LOG_COLORS=y
+# CONFIG_LOG_TIMESTAMP_SOURCE_RTOS is not set
+CONFIG_LOG_TIMESTAMP_SOURCE_SYSTEM=y
 # end of Format
 # end of Log
 
@@ -1308,12 +1078,32 @@ CONFIG_VFS_INITIALIZE_DEV_NULL=y
 # end of Virtual file system
 
 #
-# Wear Levelling
+# LittleFS
 #
-# CONFIG_WL_SECTOR_SIZE_512 is not set
-CONFIG_WL_SECTOR_SIZE_4096=y
-CONFIG_WL_SECTOR_SIZE=4096
-# end of Wear Levelling
+# CONFIG_LITTLEFS_SDMMC_SUPPORT is not set
+CONFIG_LITTLEFS_MAX_PARTITIONS=3
+CONFIG_LITTLEFS_PAGE_SIZE=256
+CONFIG_LITTLEFS_OBJ_NAME_LEN=64
+CONFIG_LITTLEFS_READ_SIZE=128
+CONFIG_LITTLEFS_WRITE_SIZE=128
+CONFIG_LITTLEFS_LOOKAHEAD_SIZE=128
+CONFIG_LITTLEFS_CACHE_SIZE=512
+CONFIG_LITTLEFS_BLOCK_CYCLES=512
+CONFIG_LITTLEFS_USE_MTIME=y
+# CONFIG_LITTLEFS_USE_ONLY_HASH is not set
+# CONFIG_LITTLEFS_HUMAN_READABLE is not set
+CONFIG_LITTLEFS_MTIME_USE_SECONDS=y
+# CONFIG_LITTLEFS_MTIME_USE_NONCE is not set
+# CONFIG_LITTLEFS_SPIFFS_COMPAT is not set
+# CONFIG_LITTLEFS_FLUSH_FILE_EVERY_WRITE is not set
+# CONFIG_LITTLEFS_FCNTL_GET_PATH is not set
+# CONFIG_LITTLEFS_MULTIVERSION is not set
+# CONFIG_LITTLEFS_MALLOC_STRATEGY_DISABLE is not set
+CONFIG_LITTLEFS_MALLOC_STRATEGY_DEFAULT=y
+# CONFIG_LITTLEFS_MALLOC_STRATEGY_INTERNAL is not set
+CONFIG_LITTLEFS_ASSERTS=y
+# CONFIG_LITTLEFS_MMAP_PARTITION is not set
+# end of LittleFS
 # end of Component config
 
 # CONFIG_IDF_EXPERIMENTAL_FEATURES is not set
@@ -1353,8 +1143,6 @@ CONFIG_STACK_CHECK_NONE=y
 # CONFIG_STACK_CHECK_STRONG is not set
 # CONFIG_STACK_CHECK_ALL is not set
 # CONFIG_WARN_WRITE_STRINGS is not set
-CONFIG_ADC2_DISABLE_DAC=y
-# CONFIG_MCPWM_ISR_IN_IRAM is not set
 # CONFIG_TWO_UNIVERSAL_MAC_ADDRESS is not set
 CONFIG_FOUR_UNIVERSAL_MAC_ADDRESS=y
 CONFIG_NUMBER_OF_UNIVERSAL_MAC_ADDRESS=4
