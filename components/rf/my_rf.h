@@ -13,6 +13,7 @@
 #include "freertos/semphr.h"
 #include "esp_err.h"
 
+#ifdef __cplusplus
 /// @brief BLE communication interface public API
 namespace my_rf
 {
@@ -44,3 +45,4 @@ namespace my_rf
     void notify_state_changed(measurement_states s);
     void show_bonded_devices();
 }
+#endif

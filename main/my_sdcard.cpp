@@ -8,7 +8,8 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
-#include "sdcard.h"
+#include "my_sdcard.h"
+#include "main.h"
 
 #include <string.h>
 #include <sys/unistd.h>
@@ -28,6 +29,7 @@ static const char *TAG = "SD";
 #define PIN_NUM_CS GPIO_NUM_13
 
 #define MOUNT_POINT "/sd"
+#define MAX_FILES 10
 
 namespace sd
 {
@@ -45,10 +47,10 @@ namespace sd
         // formatted in case when mounting fails.
         esp_vfs_fat_sdmmc_mount_config_t mount_config = {
             .format_if_mount_failed = true,
-            .max_files = 5,
+            .max_files = MAX_FILES,
             .allocation_unit_size = 16 * 1024};
 
-        ESP_LOGD(TAG, "Initializing SD card");
+        ESP_LOGI(TAG, "Initializing SD card");
 
         // Use settings defined above to initialize SD card and mount FAT filesystem.
         // Note: esp_vfs_fat_sdmmc/sdspi_mount is all-in-one convenience functions.
@@ -82,7 +84,7 @@ namespace sd
         slot_config.gpio_cs = PIN_NUM_CS;
         slot_config.host_id = (spi_host_device_t)(host.slot);
 
-        ESP_LOGD(TAG, "Mounting filesystem");
+        ESP_LOGI(TAG, "Mounting filesystem");
         ret = esp_vfs_fat_sdspi_mount(mount_point, &host, &slot_config, &mount_config, &card);
 
         if (ret != ESP_OK)
@@ -100,7 +102,7 @@ namespace sd
             }
             return ret;
         }
-        ESP_LOGD(TAG, "Filesystem mounted");
+        ESP_LOGI(TAG, "Filesystem mounted");
 
         // Use POSIX and C standard library functions to work with files.
         // Find first non-existing file name for this session
@@ -109,11 +111,10 @@ namespace sd
         do
         {
             snprintf(file_path, sizeof(file_path), MOUNT_POINT "/%i.txt", ++index);
-            if (index > 1000000)
-                return ESP_ERR_INVALID_SIZE;
+            if (index > MAX_FILES) return ESP_ERR_INVALID_SIZE;
         } while (stat(file_path, &st) == 0);
         // Create and open a new file
-        ESP_LOGD(TAG, "Opening file %s", file_path);
+        ESP_LOGI(TAG, "Opening file %s", file_path);
         FILE *f = fopen(file_path, "w");
         if (f == NULL)
         {
@@ -122,17 +123,17 @@ namespace sd
         }
         fprintf(f, "{ \"Temp\", \"Conc\" },\n[\n");
         fclose(f);
-        ESP_LOGD(TAG, "File created");
+        ESP_LOGI(TAG, "File created");
 
         return ret;
     }
 
-    esp_err_t append_result(ms::export_data_t *data)
+    esp_err_t append_result(const ms::export_data_t *data)
     {
-        FILE *f = fopen(file_path, "w");
+        FILE *f = fopen(file_path, "a");
         if (f == NULL)
             return ESP_FAIL;
-        fprintf(f, "{ %.1f, %.6f },\n", data->heater_temperature, data->concentration);
+        fprintf(f, RESULTS_FORMAT, data->heater_temperature, data->concentration);
         fclose(f);
         return ESP_OK;
     }

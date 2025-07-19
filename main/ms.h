@@ -5,6 +5,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 
+#ifdef __cplusplus
 namespace ms
 {
     struct export_data_t
@@ -27,3 +28,4 @@ namespace ms
     esp_err_t perform_transaction();
     void wait(TickType_t timeout = portMAX_DELAY);
 } // namespace ms
+#endif
