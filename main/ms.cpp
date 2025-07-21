@@ -27,12 +27,12 @@ namespace ms
     static const float RS2 = 2.00438;
     static const float K = 4.124;
     static const float R4 = 100000.0;
-    static const float B  = -0.84789444;
-    static const float C = 5.00644098;
-    static const float Rn0  = 15.7;
-    static const float Rc = 0.1;
-    static const float t0 = 40.0;
-    static const float alpha = 0.003;
+    //static const float B  = 1;
+    //static const float C = 0;
+    static const float Rn0  = 57.93;
+    static const float Rc = 5.8;
+    static const float t0 = 25.0;
+    static const float alpha = 0.0021;
     static const float reciprocal_step = 65535.0 / 5.0;
     static const float Uinf = 2.5 + K * (2.5 - RS2);
 
@@ -87,14 +87,14 @@ namespace ms
     };
 
     //Other
-    uint8_t inbound_buffer[sizeof(packet_t<resp_common_t>) * 2 + 1] = {};
-    TaskHandle_t receiver_task_handle = NULL;
-    QueueHandle_t receiver_response_queue = NULL;
-    SemaphoreHandle_t transaction_complete_semaphore = NULL;
+    static uint8_t inbound_buffer[sizeof(packet_t<resp_common_t>) * 2 + 1] = {};
+    static TaskHandle_t receiver_task_handle = NULL;
+    static QueueHandle_t receiver_response_queue = NULL;
+    static SemaphoreHandle_t transaction_complete_semaphore = NULL;
     const SemaphoreHandle_t* const transaction_complete = &transaction_complete_semaphore;
-    QueueHandle_t results_queue_queue = NULL;
+    static QueueHandle_t results_queue_queue = NULL;
     const QueueHandle_t* const results_queue = &results_queue_queue;
-    float last_heater_voltage = 0;
+    static float last_heater_voltage = 0;
 
     /**
      * PRIVATE METHODS
@@ -119,7 +119,7 @@ namespace ms
     }
     static float convert_to_concentration(float r)
     {
-        return pow(10, B * log10(r) + C);
+        return r;
     }
     static float convert_to_temperature(float rn)
     {
@@ -145,16 +145,22 @@ namespace ms
     }
     static void process_answer(cmd_designator_t request_designator)
     {
+        static export_data_t export_data;
+
         switch (request_designator)
         {
         case cmd_designator_t::SET_HEATER_R:
         case cmd_designator_t::SET_HEATER_U:
         {
             MAKE_PACKET(resp_common_t);
-            static sensor_data_t first_sensor_data = packet->payload.response[0];
-            static export_data_t export_data;
-            export_data.heater_temperature = convert_to_temperature(convert_to_heater_resistance(first_sensor_data.heater_resistance));
-            export_data.concentration = convert_to_concentration(convert_to_resistance(first_sensor_data.sensor_voltage & 0xFFFFFFu));
+            const sensor_data_t* first_sensor_data = &(packet->payload.response[0]);
+            /*ESP_LOGI(TAG, "Rcv: {%" PRIu16 ", %" PRIu32 "}, {%" PRIu16 ", %" PRIu32 "}, {%" PRIu16 ", %" PRIu32 "}, {%" PRIu16 ", %" PRIu32 "}",
+                packet->payload.response[0].heater_resistance, packet->payload.response[0].sensor_voltage & 0xFFFFFF,
+                packet->payload.response[1].heater_resistance, packet->payload.response[1].sensor_voltage & 0xFFFFFF,
+                packet->payload.response[2].heater_resistance, packet->payload.response[2].sensor_voltage & 0xFFFFFF,
+                packet->payload.response[3].heater_resistance, packet->payload.response[3].sensor_voltage & 0xFFFFFF);*/
+            export_data.heater_temperature = convert_to_temperature(convert_to_heater_resistance(first_sensor_data->heater_resistance));
+            export_data.concentration = convert_to_concentration(convert_to_resistance(first_sensor_data->sensor_voltage & 0xFFFFFFu));
             if (xQueueSend(results_queue_queue, &export_data, pdMS_TO_TICKS(1000)) != pdTRUE) ESP_LOGW(TAG, "Results queue is full!");
             break;
         }
@@ -187,12 +193,16 @@ namespace ms
     static void rx_task(void *arg)
     {
         static cmd_designator_t last_command_designator;
+        static size_t resp_len;
+        static int rxBytes;
+
         while (1) {
             if (xQueueReceive(receiver_response_queue, &last_command_designator, portMAX_DELAY) != pdPASS) continue;
-            static const size_t resp_len = get_response_length(last_command_designator);
+            resp_len = get_response_length(last_command_designator);
+            ESP_LOGD(TAG, "Expect %i bytes for cmd = %i", resp_len, (int)last_command_designator);
             if (resp_len > 0)
             {
-                static const int rxBytes = uart_read_bytes(UART_NUM, inbound_buffer, resp_len, pdMS_TO_TICKS(1000));
+                rxBytes = uart_read_bytes(UART_NUM, inbound_buffer, resp_len, pdMS_TO_TICKS(1000));
                 if (rxBytes < resp_len)
                 {
                     ESP_LOGE(TAG, "Incomplete answer (%i bytes)!", rxBytes);
@@ -200,7 +210,8 @@ namespace ms
                 else
                 {
                     inbound_buffer[rxBytes] = 0;
-                    ESP_LOGD(TAG, "Read %d bytes", rxBytes);
+                    ESP_LOGI(TAG, "Read %d bytes", rxBytes);
+                    //esp_log_buffer_hexdump_internal(TAG, inbound_buffer, rxBytes, esp_log_level_t::ESP_LOG_INFO);
                     process_answer(last_command_designator);
                 }
             }

@@ -11,6 +11,8 @@
 #define LED_PIN GPIO_NUM_33
 
 static const char TAG[] = "MAIN";
+static const float heater_target_voltage = 1.0f;
+static const size_t heater_heatup_steps = 10;
 static my_rf::dev_info_t device_info = {
     .bt_name = "MSU_SENSE",
     .manufacturer = "MSU",
@@ -48,6 +50,7 @@ void rf_trigger_callback(my_rf::measurement_states state)
 _BEGIN_STD_C
 void app_main(void)
 {
+    static const float heater_heatup_step_voltage = heater_target_voltage / (float)heater_heatup_steps;
     static bool led_state = false;
 
     //Initialize
@@ -60,20 +63,26 @@ void app_main(void)
     my_rf::trigger_callback = rf_trigger_callback;
     ESP_ERROR_CHECK(my_rf::init(&device_info));
     ESP_ERROR_CHECK(sd::init());
-    xTaskCreate(result_saving_task, "SAVE", 2048, NULL, 1, &result_saving_task_handle);
-    assert(result_saving_task_handle);
     ESP_LOGI(TAG, "Init complete");
     vTaskDelay(pdMS_TO_TICKS(3000));
 
     //Setup MS and discard first measurement
-    ESP_ERROR_CHECK_WITHOUT_ABORT(ms::set_sensing_range(ms::range_relay_state_t::RANGE_HIGH_Z));
+    ESP_ERROR_CHECK_WITHOUT_ABORT(ms::set_sensing_range(ms::range_relay_state_t::RANGE_LOW_Z));
     ms::wait();
-    for (size_t i = 0; i < 2; i++)
+    vTaskDelay(pdMS_TO_TICKS(200));
+    for (size_t i = 0; i < heater_heatup_steps; i++)
     {
-        ESP_ERROR_CHECK_WITHOUT_ABORT(ms::set_heater_voltage(2));
+        ESP_ERROR_CHECK_WITHOUT_ABORT(ms::set_heater_voltage(heater_heatup_step_voltage * i));
         ms::wait();
+        vTaskDelay(pdMS_TO_TICKS(200));
+        xQueueReset(*ms::results_queue);
     }
+    ESP_ERROR_CHECK_WITHOUT_ABORT(ms::set_heater_voltage(heater_target_voltage));
+    ms::wait();
     xQueueReset(*ms::results_queue);
+    xTaskCreate(result_saving_task, "SAVE", 3072, NULL, 1, &result_saving_task_handle);
+    assert(result_saving_task_handle);
+    vTaskDelay(pdMS_TO_TICKS(3000));
     ESP_LOGI(TAG, "MS init complete, starting cycles");
     my_rf::notify_state_changed(my_rf::measurement_states::measuring);
     
