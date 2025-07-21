@@ -29,7 +29,7 @@ static void result_saving_task(void* arg)
     while (1)
     {
         if (xQueueReceive(*ms::results_queue, &data, portMAX_DELAY) != pdTRUE) continue;
-        printf("\n" RESULTS_FORMAT, data.heater_temperature, data.concentration);
+        printf(RESULTS_FORMAT, data.heater_temperature, data.concentration);
         ESP_ERROR_CHECK_WITHOUT_ABORT(sd::append_result(&data));
         my_rf::notify_measurement_changed(data.concentration);
     }
@@ -53,14 +53,15 @@ void app_main(void)
     //Initialize
     ESP_ERROR_CHECK(gpio_set_direction(LED_PIN, GPIO_MODE_OUTPUT_OD));
     ESP_ERROR_CHECK(gpio_set_level(LED_PIN, 1));
+    ESP_ERROR_CHECK(ms::init());
+    ESP_ERROR_CHECK(gpio_set_level(LED_PIN, 0));
+    vTaskDelay(pdMS_TO_TICKS(3000)); //Wait for LDO reset circuit to enable RS422 drivers
     ESP_ERROR_CHECK(nvs_flash_init());
     my_rf::trigger_callback = rf_trigger_callback;
     ESP_ERROR_CHECK(my_rf::init(&device_info));
     ESP_ERROR_CHECK(sd::init());
-    ESP_ERROR_CHECK(ms::init());
     xTaskCreate(result_saving_task, "SAVE", 2048, NULL, 1, &result_saving_task_handle);
     assert(result_saving_task_handle);
-    ESP_ERROR_CHECK(gpio_set_level(LED_PIN, 0));
     ESP_LOGI(TAG, "Init complete");
     vTaskDelay(pdMS_TO_TICKS(3000));
 
@@ -79,7 +80,22 @@ void app_main(void)
     //Perform mesurement cycles
     while (1)
     {
-        if (measure)
+        static bool last_measure = true;
+
+        bool m = measure; //Thread-safety
+        if (m != last_measure)
+        {
+            if (m)
+            {
+                ESP_ERROR_CHECK_WITHOUT_ABORT(sd::create_new_file());
+            }
+            else
+            {
+                ESP_ERROR_CHECK_WITHOUT_ABORT(sd::finalize_file());
+            }
+            last_measure = m;
+        }
+        if (m)
         {
             ESP_ERROR_CHECK_WITHOUT_ABORT(ms::perform_transaction());
             led_state = !led_state;

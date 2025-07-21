@@ -29,7 +29,7 @@ static const char *TAG = "SD";
 #define PIN_NUM_CS GPIO_NUM_13
 
 #define MOUNT_POINT "/sd"
-#define MAX_FILES 10
+#define MAX_FILES 32
 
 namespace sd
 {
@@ -48,7 +48,7 @@ namespace sd
         esp_vfs_fat_sdmmc_mount_config_t mount_config = {
             .format_if_mount_failed = true,
             .max_files = MAX_FILES,
-            .allocation_unit_size = 16 * 1024};
+            .allocation_unit_size = 1024};
 
         ESP_LOGI(TAG, "Initializing SD card");
 
@@ -105,9 +105,14 @@ namespace sd
         ESP_LOGI(TAG, "Filesystem mounted");
 
         // Use POSIX and C standard library functions to work with files.
+        return create_new_file();
+    }
+
+    esp_err_t create_new_file()
+    {
         // Find first non-existing file name for this session
-        struct stat st;
-        int index = 0;
+        static struct stat st;
+        static int index = 0;
         do
         {
             snprintf(file_path, sizeof(file_path), MOUNT_POINT "/%i.txt", ++index);
@@ -124,8 +129,17 @@ namespace sd
         fprintf(f, "{ \"Temp\", \"Conc\" },\n[\n");
         fclose(f);
         ESP_LOGI(TAG, "File created");
+        return ESP_OK;
+    }
 
-        return ret;
+    esp_err_t finalize_file()
+    {
+        FILE *f = fopen(file_path, "a");
+        if (f == NULL)
+            return ESP_FAIL;
+        fprintf(f, "]\n");
+        fclose(f);
+        return ESP_OK;
     }
 
     esp_err_t append_result(const ms::export_data_t *data)

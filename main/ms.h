@@ -26,6 +26,6 @@ namespace ms
     esp_err_t set_heater_voltage(float volts);
     esp_err_t set_sensing_range(range_relay_state_t range);
     esp_err_t perform_transaction();
-    void wait(TickType_t timeout = portMAX_DELAY);
+    esp_err_t wait(TickType_t timeout = portMAX_DELAY);
 } // namespace ms
 #endif

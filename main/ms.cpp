@@ -13,7 +13,7 @@
 
 #define MS_BAUDRATE 115200
 
-#define MAKE_PACKET(t) packet_t<t> packet = *reinterpret_cast<packet_t<t>*>(inbound_buffer)
+#define MAKE_PACKET(t) packet_t<t>* packet = reinterpret_cast<packet_t<t>*>(inbound_buffer)
 #define TAKE_LOCK(t) xSemaphoreTake(transaction_complete_semaphore, t)
 
 namespace ms
@@ -125,15 +125,23 @@ namespace ms
     {
         return ((rn - Rc) / (Rn0 - Rc) - 1) / alpha + t0;
     }
-    template <typename T> static int send(const packet_t<T>* packet)
+    template <typename T> static int send(const packet_t<T>* packet_ptr)
     {
-        if (TAKE_LOCK(pdMS_TO_TICKS(2000)) != pdTRUE) return 0;
+        if (TAKE_LOCK(pdMS_TO_TICKS(2000)) != pdTRUE)
+        {
+            ESP_LOGE(TAG, "Can't take transaction semaphore!");
+            return 0;
+        }
         ESP_LOGD(TAG, "Transaction semaphore taken");
-        auto payload = reinterpret_cast<const uint8_t*>(&(packet->payload));
+        auto payload = reinterpret_cast<const uint8_t*>(&(packet_ptr->payload));
         uart_flush(UART_NUM);
-        if (xQueueSend(receiver_response_queue, &(payload[0]), 0) != pdTRUE) return 0; //First byte of the payload is the command designator
+        if (xQueueSend(receiver_response_queue, &(payload[0]), 0) != pdTRUE)
+        {
+            ESP_LOGE(TAG, "Receiver queue is full!");
+            return 0; //First byte of the payload is the command designator
+        }
         ESP_LOGD(TAG, "Receiver queue is not full");
-        return uart_write_bytes(UART_NUM, packet, sizeof(T));
+        return uart_write_bytes(UART_NUM, packet_ptr, sizeof(*packet_ptr));
     }
     static void process_answer(cmd_designator_t request_designator)
     {
@@ -143,8 +151,8 @@ namespace ms
         case cmd_designator_t::SET_HEATER_U:
         {
             MAKE_PACKET(resp_common_t);
-            sensor_data_t first_sensor_data = packet.payload.response[0];
-            export_data_t export_data;
+            static sensor_data_t first_sensor_data = packet->payload.response[0];
+            static export_data_t export_data;
             export_data.heater_temperature = convert_to_temperature(convert_to_heater_resistance(first_sensor_data.heater_resistance));
             export_data.concentration = convert_to_concentration(convert_to_resistance(first_sensor_data.sensor_voltage & 0xFFFFFFu));
             if (xQueueSend(results_queue_queue, &export_data, pdMS_TO_TICKS(1000)) != pdTRUE) ESP_LOGW(TAG, "Results queue is full!");
@@ -153,7 +161,7 @@ namespace ms
         case cmd_designator_t::SET_RANGE_RELAY:
         {
             MAKE_PACKET(resp_range_relay_t);
-            if (packet.payload.response == 0x20) ESP_LOGD(TAG, "Range relays are set.");
+            if (packet->payload.response == 0x20) ESP_LOGD(TAG, "Range relays are set.");
             else ESP_LOGE(TAG, "Unexpected response for SET_RANGE_RELAY!");
             break;
         }
@@ -181,10 +189,10 @@ namespace ms
         static cmd_designator_t last_command_designator;
         while (1) {
             if (xQueueReceive(receiver_response_queue, &last_command_designator, portMAX_DELAY) != pdPASS) continue;
-            size_t resp_len = get_response_length(last_command_designator);
+            static const size_t resp_len = get_response_length(last_command_designator);
             if (resp_len > 0)
             {
-                const int rxBytes = uart_read_bytes(UART_NUM, inbound_buffer, resp_len, pdMS_TO_TICKS(1000));
+                static const int rxBytes = uart_read_bytes(UART_NUM, inbound_buffer, resp_len, pdMS_TO_TICKS(1000));
                 if (rxBytes < resp_len)
                 {
                     ESP_LOGE(TAG, "Incomplete answer (%i bytes)!", rxBytes);
@@ -204,6 +212,15 @@ namespace ms
             uart_flush(UART_NUM);
             xSemaphoreGive(transaction_complete_semaphore);
         }
+    }
+    static esp_err_t control_sending(int sent, int sz)
+    {
+        if (sent != sz)
+        {
+            ESP_LOGE(TAG, "Partial sending: %i instead of %i!", sent, sz);
+            return ESP_FAIL;
+        }
+        return ESP_OK;
     }
 
     /**
@@ -234,7 +251,7 @@ namespace ms
         assert(transaction_complete_semaphore);
         xSemaphoreGive(transaction_complete_semaphore);
         results_queue_queue = xQueueCreate(8, sizeof(export_data_t));
-        xTaskCreate(rx_task, "MS_RX", 2048, NULL, 1, &receiver_task_handle);
+        xTaskCreate(rx_task, "MS_RX", 3072, NULL, 1, &receiver_task_handle);
         assert(receiver_task_handle);
         return ESP_OK;
     }
@@ -247,7 +264,7 @@ namespace ms
         if (raw > UINT16_MAX) raw = UINT16_MAX;
         packet.payload.voltages.value[0] = raw;
         last_heater_voltage = volts;
-        return send(&packet) == sizeof(packet) ? ESP_OK : ESP_FAIL;
+        return control_sending(send(&packet), sizeof(packet));
     }
     esp_err_t set_sensing_range(range_relay_state_t range)
     {
@@ -258,15 +275,20 @@ namespace ms
         {
             packet.payload.state |= (range << (i * 2));
         }
-        return send(&packet) == sizeof(packet) ? ESP_OK : ESP_FAIL;
+        return control_sending(send(&packet), sizeof(packet));
     }
     esp_err_t perform_transaction()
     {
         return set_heater_voltage(last_heater_voltage);
     }
-    void wait(TickType_t timeout)
+    esp_err_t wait(TickType_t timeout)
     {
-        TAKE_LOCK(timeout);
-        xSemaphoreGive(transaction_complete_semaphore);
+        BaseType_t taken = TAKE_LOCK(timeout);
+        if (taken == pdTRUE) 
+        {
+            xSemaphoreGive(transaction_complete_semaphore);
+            return ESP_OK;
+        }
+        return ESP_ERR_TIMEOUT;
     }
 } // namespace ms
