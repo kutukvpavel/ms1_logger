@@ -11,7 +11,7 @@
 #define LED_PIN GPIO_NUM_33
 
 static const char TAG[] = "MAIN";
-static const float heater_target_voltage = 1.0f;
+static const float heater_target_voltage = 3.0f;
 static const size_t heater_heatup_steps = 10;
 static my_rf::dev_info_t device_info = {
     .bt_name = "MSU_SENSE",
