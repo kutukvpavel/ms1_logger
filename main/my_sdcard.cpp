@@ -29,7 +29,6 @@ static const char *TAG = "SD";
 #define PIN_NUM_CS GPIO_NUM_13
 
 #define MOUNT_POINT "/sd"
-#define MAX_FILES 32
 
 namespace sd
 {
@@ -47,7 +46,7 @@ namespace sd
         // formatted in case when mounting fails.
         esp_vfs_fat_sdmmc_mount_config_t mount_config = {
             .format_if_mount_failed = true,
-            .max_files = MAX_FILES,
+            .max_files = 2,
             .allocation_unit_size = 1024};
 
         ESP_LOGI(TAG, "Initializing SD card");
@@ -116,16 +115,6 @@ namespace sd
         do
         {
             snprintf(file_path, sizeof(file_path), MOUNT_POINT "/%i.txt", ++index);
-            if (index > MAX_FILES) 
-            {
-                for (size_t i = 0; i < MAX_FILES; i++)
-                {
-                    snprintf(file_path, sizeof(file_path), MOUNT_POINT "/%i.txt", i);
-                    unlink(file_path);
-                }
-                index = 0;
-                snprintf(file_path, sizeof(file_path), MOUNT_POINT "/%i.txt", index);
-            }
         } while (stat(file_path, &st) == 0);
         // Create and open a new file
         ESP_LOGI(TAG, "Opening file %s", file_path);
