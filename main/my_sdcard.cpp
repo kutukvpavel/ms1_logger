@@ -116,7 +116,16 @@ namespace sd
         do
         {
             snprintf(file_path, sizeof(file_path), MOUNT_POINT "/%i.txt", ++index);
-            if (index > MAX_FILES) return ESP_ERR_INVALID_SIZE;
+            if (index > MAX_FILES) 
+            {
+                for (size_t i = 0; i < MAX_FILES; i++)
+                {
+                    snprintf(file_path, sizeof(file_path), MOUNT_POINT "/%i.txt", i);
+                    unlink(file_path);
+                }
+                index = 0;
+                snprintf(file_path, sizeof(file_path), MOUNT_POINT "/%i.txt", index);
+            }
         } while (stat(file_path, &st) == 0);
         // Create and open a new file
         ESP_LOGI(TAG, "Opening file %s", file_path);
